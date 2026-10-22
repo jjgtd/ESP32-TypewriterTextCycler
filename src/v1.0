@@ -1,0 +1,124 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1
+#define SCREEN_ADDRESS 0x3C
+
+// Pin layout for ESP32-C3 Super Mini
+#define SCL_PIN 8  // GPIO 8
+#define SDA_PIN 9  // GPIO 9
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// 8x8 Heart Icon Bitmap
+const unsigned char PROGMEM heart_bmp[] = {
+  0b00000000,
+  0b01100110,
+  0b11111111,
+  0b11111111,
+  0b01111110,
+  0b00111100,
+  0b00011000,
+  0b00000000
+};
+
+// Prints text letter-by-letter with a typewriter effect
+void printTypewriter(const char* text, int delayMs = 30) {
+  for (int i = 0; text[i] != '\0'; i++) {
+    display.print(text[i]);
+    display.display();
+    delay(delayMs);
+  }
+}
+
+// Displays a multi-line pickup line and draws a heart at the end
+void showPickupLine(const char* lines[], int lineCount) {
+  display.clearDisplay();
+  
+  int lineSpacing = 12;
+  int startY = 2;
+
+  for (int i = 0; i < lineCount; i++) {
+    display.setCursor(0, startY + (i * lineSpacing));
+    printTypewriter(lines[i], 35);
+    delay(100);
+  }
+
+  // Calculate heart coordinates based on cursor position
+  int heartX = display.getCursorX() + 2;
+  int heartY = display.getCursorY();
+  
+  // Handle line wrapping cleanly if text reaches right margin
+  if (heartX > 118) {
+    heartX = 0;
+    heartY += lineSpacing;
+  }
+
+  // Prevent drawing off the bottom of the screen (MAX Y = 56 for an 8px tall bitmap)
+  if (heartY > 56) {
+    heartY = 56;
+  }
+
+  display.drawBitmap(heartX, heartY, heart_bmp, 8, 8, SSD1306_WHITE);
+  display.display();
+
+  // Hold text on screen before transitioning to the next line
+  delay(4000);
+}
+
+void setup() {
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    for (;;); // Lockup if OLED isn't detected
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+}
+
+void loop() {
+  // 1. Resistor
+  const char* resistor[] = {
+    "Are you a resistor?",
+    "Because you don't Just",
+    "control current...",
+    "you control",
+    "my heart..."
+  };
+  showPickupLine(resistor, 5);
+
+  // 2. Capacitor
+  const char* capacitor[] = {
+    "Are you a capacitor?",
+    "Because you store up",
+    "energy inside me",
+    "every time you",
+    "are near..."
+  };
+  showPickupLine(capacitor, 5);
+
+  // 3. Oscilloscope
+  const char* oscilloscope[] = {
+    "Are you an",
+    "oscilloscope?",
+    "Because my heart rate",
+    "spikes when I look",
+    "at you..."
+  };
+  showPickupLine(oscilloscope, 5);
+
+  // 4. Voltage Source
+  const char* voltageSource[] = {
+    "Are you a",
+    "voltage source?",
+    "Because you create",
+    "a potential diff",
+    "in my life..."
+  };
+  showPickupLine(voltageSource, 5);
+}
