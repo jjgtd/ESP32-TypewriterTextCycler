@@ -38,8 +38,9 @@ void printTypewriter(const char* text, int delayMs = 30) {
 void showPickupLine(const char* lines[], int lineCount) {
   display.clearDisplay();
   
-  int lineSpacing = 12;
-  int startY = 2;
+  // Bottom half constraints: Y starts at 32, max 4 lines (8px height per line)
+  int lineSpacing = 8;
+  int startY = 32;
 
   for (int i = 0; i < lineCount; i++) {
     display.setCursor(0, startY + (i * lineSpacing));
@@ -47,17 +48,20 @@ void showPickupLine(const char* lines[], int lineCount) {
     delay(100);
   }
 
-  // Calculate heart coordinates based on cursor position
+  // Calculate heart coordinates based on final cursor position
   int heartX = display.getCursorX() + 2;
   int heartY = display.getCursorY();
   
+  // Ensure heart Y stays within the bottom half (32 to 56)
+  if (heartY < 32) heartY = 32;
+
   // Handle line wrapping cleanly if text reaches right margin
   if (heartX > 118) {
     heartX = 0;
     heartY += lineSpacing;
   }
 
-  // Prevent drawing off the bottom of the screen (MAX Y = 56 for an 8px tall bitmap)
+  // Clamp heart Y so an 8px bitmap never draws past Y=63
   if (heartY > 56) {
     heartY = 56;
   }
@@ -65,7 +69,7 @@ void showPickupLine(const char* lines[], int lineCount) {
   display.drawBitmap(heartX, heartY, heart_bmp, 8, 8, SSD1306_WHITE);
   display.display();
 
-  // Hold text on screen before transitioning to the next line
+  // Hold text on screen before transitioning
   delay(4000);
 }
 
@@ -82,43 +86,13 @@ void setup() {
 }
 
 void loop() {
-  // 1. Resistor
+  // 1. Resistor (Condensed to 4 lines, max 21 chars per line)
   const char* resistor[] = {
     "Are you a resistor?",
-    "Because you don't Just",
+    "Cuz you don't just",
     "control current...",
-    "you control",
-    "my heart..."
+    "you control my heart"
   };
-  showPickupLine(resistor, 5);
+  showPickupLine(resistor, 4);
 
   // 2. Capacitor
-  const char* capacitor[] = {
-    "Are you a capacitor?",
-    "Because you store up",
-    "energy inside me",
-    "every time you",
-    "are near..."
-  };
-  showPickupLine(capacitor, 5);
-
-  // 3. Oscilloscope
-  const char* oscilloscope[] = {
-    "Are you an",
-    "oscilloscope?",
-    "Because my heart rate",
-    "spikes when I look",
-    "at you..."
-  };
-  showPickupLine(oscilloscope, 5);
-
-  // 4. Voltage Source
-  const char* voltageSource[] = {
-    "Are you a",
-    "voltage source?",
-    "Because you create",
-    "a potential diff",
-    "in my life..."
-  };
-  showPickupLine(voltageSource, 5);
-}
